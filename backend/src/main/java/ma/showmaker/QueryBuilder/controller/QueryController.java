@@ -24,9 +24,11 @@ public class QueryController {
         String selectedColumns = (queryRequestDto.getColumns() == null || queryRequestDto.getColumns().isEmpty())
                 ? "*"
                 : String.join(", ", queryRequestDto.getColumns());
+        // [age, name] age, name
 
         StringBuilder statement = new StringBuilder("select " + selectedColumns + " from " + queryRequestDto.getTable());
 
+        //where name <>=like 'reda'
         //adding filters
         if(queryRequestDto.getFilters() != null || !queryRequestDto.getFilters().isEmpty()){
             statement.append(" where");
@@ -50,7 +52,7 @@ public class QueryController {
                 }
             }
         }
-        Query query = this.entityManager.createQuery(statement.toString());
+        Query query = this.entityManager.createNativeQuery(statement.toString());
         return query.getResultList();
     }
 }
