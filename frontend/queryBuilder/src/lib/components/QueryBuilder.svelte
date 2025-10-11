@@ -1,14 +1,14 @@
 <script lang="js">
 	import { onMount } from "svelte";
-	import { getTableColumns, getTables } from "../../api";
+	import { executeQuery, getTableColumns, getTables } from "../../api";
 
     let tables = $state([]);
     let selectedTable= $state('');
     let columns = $state([]);
     let selectedColumns = $state([]);
     let filters = $state([])
-    let selectedFilters = $state([]);
-    const results = $state([]);
+    let results = $state([]);
+    let error = $state('');
 
 
     const operators = [['>', '<', '=', 'like', '!=']];
@@ -27,6 +27,27 @@
     
     function addFilter(){
         filters.push({column: '', operator: '', value: ''});
+    }
+
+    async function generateQuery(){
+      if(!selectedTable){
+        error = 'no table selected';
+        return;
+      }
+      const payload = {
+        table: selectedTable,
+        columns: selectedColumns,
+        filters: filters
+      };
+      console.log(payload);
+      try{
+        const data = await executeQuery(payload);
+        results = data;
+        console.log(results);
+      }catch(err){
+        error = err;
+        results = [];
+      }
     }
 </script>
 
@@ -83,8 +104,34 @@
         {/each}
         <button onclick={addFilter}>Add Filter</button> 
     {/if}
+    <button onclick={generateQuery}>Generate Query</button>
+
+    {#if results.length > 0}
+    <div>
+      <table>
+        <thead>
+          <tr>
+            {#each selectedColumns as column}
+              <th>{column}</th>
+            {/each}
+          </tr>
+        </thead>
+        <tbody>
+          {#each results as row}
+            <tr>
+              {#each (Array.isArray(row) ? row : [row]) as value}
+                <td>{value}</td>
+              {/each}
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
+    {/if}
 </div>
-  <!-- Debug section to show all state -->
+
+<!--
+  Debug section to show all state 
   <div class="debug">
     <h3>Current State</h3>
     <pre>
@@ -96,3 +143,5 @@
       results: {JSON.stringify(results, null, 2)}
     </pre>
   </div>
+  -->
+
