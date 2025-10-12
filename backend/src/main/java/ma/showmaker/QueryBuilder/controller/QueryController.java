@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import ma.showmaker.QueryBuilder.dto.FilterDto;
 import ma.showmaker.QueryBuilder.dto.QueryRequestDto;
+import ma.showmaker.QueryBuilder.dto.QueryResponseDto;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,7 +22,7 @@ public class QueryController {
     }
 
     @PostMapping("/query")
-    public List<?> executeQuery(@RequestBody QueryRequestDto queryRequestDto){
+    public QueryResponseDto<Object> executeQuery(@RequestBody QueryRequestDto queryRequestDto){
         String table = queryRequestDto.getTable();
         String tablePrefix = table.substring(0, 1).toLowerCase();
 
@@ -48,7 +49,7 @@ public class QueryController {
                         .append(" ");
                 //this needs to be handled in a better way
                 if (filter.getColumn().equalsIgnoreCase("amount") ||
-                        filter.getColumn().equalsIgnoreCase("age")) {
+                        filter.getColumn().equalsIgnoreCase("age") || filter.getColumn().equalsIgnoreCase("id")) {
                     statement.append(filter.getValue()); // numeric
                 } else {
                     statement.append("'").append(filter.getValue()).append("'"); // string
@@ -59,6 +60,9 @@ public class QueryController {
             }
         }
         Query query = this.entityManager.createQuery(statement.toString());
-        return query.getResultList();
+        return QueryResponseDto.builder()
+                .rows(query.getResultList())
+                .query(statement.toString())
+                .build();
     }
 }

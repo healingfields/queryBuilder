@@ -7,7 +7,7 @@
     let columns = $state([]);
     let selectedColumns = $state([]);
     let filters = $state([]);
-    let results = $state([]);
+    let results = $state({query:'', rows:[]});
     let error = $state('');
 
     const operators = ['>', '<', '=', 'like', '!='];
@@ -28,7 +28,7 @@
             console.log('Columns for', selectedTable, ':', columns);
             selectedColumns = [];
             filters = [];
-            results = [];
+            results = {query:'', rows:[]};
             error = '';
         } catch (err) {
             console.error('Error fetching columns:', err);
@@ -60,17 +60,15 @@
             filters: filters.filter(f => f.column && f.operator && f.value)
         };
 
-        console.log('Sending payload:', JSON.stringify(payload, null, 2));
-
         try {
             const data = await executeQuery(payload);
             console.log('Query results:', data);
-            results = Array.isArray(data) ? data : [];
+            results = data;
             error = '';
         } catch (err) {
             console.error('Error generating query:', err);
             error = err.message;
-            results = [];
+            results = {query:'', rows:[]};
         }
     }
 </script>
@@ -140,8 +138,13 @@
       <div class="error-message">{error}</div>
   {/if}
 
+  <div>
+    <label for="">Generated query:</label>
+    <span style="color: blueviolet;font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;font-weight:500">{results.query}</span>
+  </div>
+
   <!-- Results table -->
-  {#if results.length > 0}
+  {#if results.rows.length > 0}
       <div class="section results">
           <h3>Query Results</h3>
           <table>
@@ -153,7 +156,7 @@
                   </tr>
               </thead>
               <tbody>
-                  {#each results as row}
+                  {#each results.rows as row}
                       <tr>
                           {#each (Array.isArray(row) ? row : [row]) as value}
                               <td>{value}</td>
