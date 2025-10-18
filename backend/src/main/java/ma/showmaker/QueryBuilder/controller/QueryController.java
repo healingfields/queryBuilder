@@ -5,6 +5,7 @@ import jakarta.persistence.Query;
 import ma.showmaker.QueryBuilder.dto.FilterDto;
 import ma.showmaker.QueryBuilder.dto.QueryRequestDto;
 import ma.showmaker.QueryBuilder.dto.QueryResponseDto;
+import ma.showmaker.QueryBuilder.service.SchemaService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,25 +15,22 @@ import java.util.stream.Collectors;
 @RestController
 public class QueryController {
 
-    private final EntityManager entityManager;
+    private final SchemaService schemaService;
 
-    public QueryController(EntityManager entityManager) {
-        this.entityManager = entityManager;
+    public QueryController(SchemaService schemaService) {
+        this.schemaService = schemaService;
     }
 
     @PostMapping("/query")
     public QueryResponseDto<Object> executeQuery(@RequestBody QueryRequestDto queryRequestDto){
         String table = queryRequestDto.getTable();
-        String tablePrefix = table.substring(0, 1).toLowerCase();
 
         String selectedColumns = (queryRequestDto.getColumns() == null || queryRequestDto.getColumns().isEmpty())
-                ? tablePrefix // Return tablePrefix (e.g., "o") when columns are null or empty
-                : queryRequestDto.getColumns().stream()
-                .map(column -> tablePrefix + "." + "" + column + "") // Prefix and escape column
-                .collect(Collectors.joining(", "));
+                ? "*"
+                : String.join(", ", queryRequestDto.getColumns());
         // [age, name] age, name
 
-        StringBuilder statement = new StringBuilder("select " + selectedColumns + " from " + table + " " + tablePrefix);
+        StringBuilder statement = new StringBuilder("select " + selectedColumns + " from " + table);
 
         //where name <>=like 'reda'
         //adding filters
@@ -42,7 +40,7 @@ public class QueryController {
                 FilterDto filter = queryRequestDto.getFilters().get(i);
 
                 statement.append(" ")
-                        .append(tablePrefix + "." + filter.getColumn())
+                        .append(filter.getColumn())
                         .append(" ")
                         .append(filter.getOperator())
                         .append(" ");
@@ -58,9 +56,7 @@ public class QueryController {
                 }
             }
         }
-        Query query = this.entityManager.createQuery(statement.toString());
         return QueryResponseDto.builder()
-                .rows(query.getResultList())
                 .query(statement.toString())
                 .build();
     }
