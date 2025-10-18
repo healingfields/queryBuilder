@@ -1,9 +1,10 @@
 package ma.showmaker.QueryBuilder.controller;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.metamodel.Attribute;
-import jakarta.persistence.metamodel.EntityType;
-import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.EntityNotFoundException;
+import ma.showmaker.QueryBuilder.model.ColumnSchema;
+import ma.showmaker.QueryBuilder.model.DatabaseSchema;
+import ma.showmaker.QueryBuilder.model.TableSchema;
+import ma.showmaker.QueryBuilder.service.SchemaService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,28 +15,24 @@ import java.util.Objects;
 @RestController
 public class ColumnController {
 
-    private final EntityManager entityManager;
-
-    public ColumnController(EntityManager entityManager) {
-        this.entityManager = entityManager;
+    private final SchemaService schemaService;
+    public ColumnController(SchemaService schemaService) {
+        this.schemaService = schemaService;
     }
 
-
     @GetMapping("/columns")
-    public List<String> getTableColumns(@RequestParam String table){
-        EntityType<?> entity = this.entityManager
-                .getMetamodel()
-                .getEntities()
-                .stream()
-                .filter(entityType -> entityType.getName().equalsIgnoreCase(table))
+    public List<String> getTableColumns(@RequestParam String tableName){
+        DatabaseSchema databaseSchema = this.schemaService.getDatabaseSchema();
+        TableSchema table = databaseSchema
+                .getTables()
+                .stream().
+                filter(tableSchema -> Objects.equals(tableSchema.getName(), tableName))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("cannot find table"));
-
-        return entity
-                .getSingularAttributes()
+                .orElseThrow(() -> new EntityNotFoundException("table not found"));
+        return table
+                .getColumns()
                 .stream()
-                .map(SingularAttribute::getName)
+                .map(ColumnSchema::getName)
                 .toList();
-
     }
 }

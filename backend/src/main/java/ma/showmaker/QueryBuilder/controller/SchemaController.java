@@ -3,13 +3,11 @@ package ma.showmaker.QueryBuilder.controller;
 import ma.showmaker.QueryBuilder.model.DatabaseSchema;
 import ma.showmaker.QueryBuilder.service.SchemaService;
 import ma.showmaker.QueryBuilder.service.SqlSchemaParserService;
-import net.sf.jsqlparser.JSQLParserException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
