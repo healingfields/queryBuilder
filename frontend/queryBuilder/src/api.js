@@ -6,7 +6,7 @@ export async function getTables(){
 }
 
 export async function getTableColumns(table){
-    const res = await fetch(`${BASE_URL}/columns?table=${table}`);
+    const res = await fetch(`${BASE_URL}/columns?tableName=${table}`);
     return res.json();
 }
 
@@ -17,4 +17,24 @@ export async function executeQuery(query){
         body: JSON.stringify(query)
     });
     return res.json();
+}
+
+export async function uploadSchema(file){
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${BASE_URL}/schema/upload-sql`, {
+        method: 'POST',
+        body: formData 
+    });
+    if (!res.ok) {
+        throw new Error('Failed to upload schema');
+    }
+    const data = await res.json();
+    if(!data){
+        throw new Error('No data returned from server');
+    }
+    return {
+        success: true,
+        data,
+    };
 }
