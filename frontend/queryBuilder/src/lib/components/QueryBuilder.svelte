@@ -130,7 +130,7 @@
           <p> Select columns to filter with:</p>
           {#each filters as filter, i}
               <div>
-                  <select bind:value={filter.column} on:change={ () => handleColumnChange(filter, i)}>
+                  <select bind:value={filter.column}>
                       <option value="" disabled>-- Column --</option>
                       {#each columns as column}
                           <option value={column.name}>{column.name}</option>
