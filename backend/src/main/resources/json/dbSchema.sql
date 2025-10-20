@@ -6,6 +6,9 @@ amount DOUBLE,
 order_date DATE
 );
 
+INSERT INTO `orders` (`id`, `product`, `amount`, `order_date`) VALUES
+(1, 'Alice', null, null);
+
 -- Customers table
 CREATE TABLE customers (
 id INT PRIMARY KEY,

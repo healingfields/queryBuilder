@@ -1,8 +1,6 @@
-<script lang="js">
-	import { onMount } from "svelte";
+<script lang="js">  
 	import { executeQuery, getTableColumns, getTables, uploadSchema } from "../../api";
 	import { globalState } from "$lib/globalState.svelte";
-    let props = $props();
     
     let databaseName = $state(null);
     let tables = $derived(globalState.tables);
@@ -15,15 +13,8 @@
 
     const operators = ['>', '<', '=', 'like', '!='];
 
-    onMount(async () => {
-      /*  try {
-            tables = await getTables();
-            console.log('Tables:', tables);
-        } catch (err) {
-            console.error('Error fetching tables:', err);
-            tables = ['Orders', 'Customers', 'Products'];
-        }*/
-    });
+    let availableOperators = {};
+    let availableValues = {};
 
     async function handleTableChange() {
         try {
@@ -33,9 +24,37 @@
             filters = [];
             results = {query:'', rows:[]};
             error = '';
+
+            columns.forEach(column => {
+                switch (column.type) {
+                    case 'BOOLEAN':
+                        availableOperators[column.name] = ['=', '!='];
+                        availableValues[column.name] = ['true', 'false']; 
+                        break;
+                    case 'DOUBLE','INT':
+                        availableOperators[column.name] = ['=', '!=', '<', '>'];
+                        availableValues[column.name] = []; 
+                        break;
+                    case 'VARCHAR (255)':
+                        availableOperators[column.name] = ['=', '!=', 'like'];
+                        availableValues[column.name] = []; 
+                        break;
+                    case 'DATE':
+                        availableOperators[column.name] = ['=', '!=', '<', '>'];
+                        availableValues[column.name] = [];
+                        break;
+                    default:
+                        availableOperators[column.name] = operators;
+                        availableValues[column.name] = [];
+                        break;
+                }
+            })
+            console.log(availableOperators);
+            console.log(availableValues);
+            
         } catch (err) {
             console.error('Error fetching columns:', err);
-            columns = ['product', 'amount', 'date'];
+            columns = [];
         }
     }
 
@@ -74,6 +93,9 @@
             results = {query:'', rows:[]};
         }
     }
+    function handleColumnChange(filter, i){
+        const selectedColumn = columns.find(col => col.name === filter.column)
+    }
 </script>
 
 <h1>Database : {databaseName}</h1>
@@ -93,8 +115,8 @@
           <div >
               {#each columns as column}
                   <label >
-                      <input type="checkbox" bind:group={selectedColumns} value={column}>
-                      <span>{column}</span>
+                      <input type="checkbox" bind:group={selectedColumns} value={column.name}>
+                      <span>{column.name}</span>
                   </label>
               {/each}
           </div>
@@ -108,21 +130,30 @@
           <p> Select columns to filter with:</p>
           {#each filters as filter, i}
               <div>
-                  <select bind:value={filter.column}>
+                  <select bind:value={filter.column} on:change={ () => handleColumnChange(filter, i)}>
                       <option value="" disabled>-- Column --</option>
                       {#each columns as column}
-                          <option value={column}>{column}</option>
+                          <option value={column.name}>{column.name}</option>
                       {/each}
                   </select>
                   <select bind:value={filter.operator}>
                       <option value="" disabled>-- Operator --</option>
-                      {#each operators as op}
+                      {#each availableOperators[filter.column] || [] as op}
                           <option value={op}>{op}</option>
                       {/each}
                   </select>
+                  {#if availableValues[filter.column]?.length > 0}
+                  <select bind:value={filter.value}>
+                    <option value="" disabled>-- Value --</option>
+                    {#each availableValues[filter.column] || [] as val}
+                        <option value={val}>{val}</option>
+                    {/each}
+                </select>
+                {:else}
                   <input type="text" bind:value={filter.value} placeholder="Value">
-                  <button on:click={() => removeFilter(i)}>Remove</button>
-              </div>
+                    {/if}
+              <button on:click={() => removeFilter(i)}>Remove</button>
+            </div>
           {/each}
           <button on:click={addFilter}>Add Filter</button>
       </div>
