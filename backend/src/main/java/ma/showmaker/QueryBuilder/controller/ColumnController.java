@@ -21,7 +21,7 @@ public class ColumnController {
     }
 
     @GetMapping("/columns")
-    public List<String> getTableColumns(@RequestParam String tableName){
+    public List<ColumnSchema> getTableColumns(@RequestParam String tableName){
         DatabaseSchema databaseSchema = this.schemaService.getDatabaseSchema();
         TableSchema table = databaseSchema
                 .getTables()
@@ -30,9 +30,6 @@ public class ColumnController {
                 .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("table not found"));
         return table
-                .getColumns()
-                .stream()
-                .map(ColumnSchema::getName)
-                .toList();
+                .getColumns();
     }
 }
