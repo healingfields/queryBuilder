@@ -30,6 +30,6 @@ public class QueryService {
                 .filter(columnSchema -> Objects.equals(filter.getColumn(), columnSchema.getName()))
                 .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("column not found"));
-        return columnSchema1.getType().equalsIgnoreCase("String") ? String.format("' %s '", filter.getValue()) : filter.getValue();
+        return columnSchema1.getType().equalsIgnoreCase("VARCHAR (255)") ? String.format("' %s '", filter.getValue()) : filter.getValue();
     }
 }
